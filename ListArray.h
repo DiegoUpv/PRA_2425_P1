@@ -1,109 +1,116 @@
 #include <ostream>
-#include "List.h"
 #include <stdexcept>
 
+#include "List.h"
+
+
 template <typename T>
-class ListArray : public List<T> {
-private:
-    T* arr;  
-    int max; 
-    int n;   
-    static const int MINSIZE = 2;   
+class ListArray : public List<T>{
 
-  
-    void resize(int new_size) {
-        if (new_size < MINSIZE) new_size = MINSIZE;
-        T* new_arr = new T[new_size];
-        
-        
-        for (int i = 0; i < n; ++i) {
-            new_arr[i] = arr[i];
-        }
+	private:
+		T* arr;
+		int max;
+		int n;
+		static const int MINSIZE = 2;
 
-        delete[] arr;
-        arr = new_arr;
-        max = new_size;
-    }
+		void resize(int new_size){
+			T* new_arr = new T[new_size];
 
-public:
-    
-    ListArray() : arr(new T[MINSIZE]), max(MINSIZE), n(0) {}
+			for(int i = 0; i < std::min(max, new_size); i++){
+				new_arr[i] = arr[i];
+			}
 
-    
-    ~ListArray() {
-        delete[] arr;
-    }
+			delete[] arr;
+			arr = new_arr;
+			max = new_size;
+		}
 
-    
-    T operator[](int pos) const {
-        if (pos < 0 || pos >= n) {
-            throw std::out_of_range("Index out of range");
-        }
-        return arr[pos];
-    }
+	public:
+		void insert(int pos, T e){
+			if(pos < 0 || pos > n) throw std::out_of_range("Posicion fuera de rango");
 
-    
-    friend std::ostream& operator<<(std::ostream& out, const ListArray<T>& list) {
-        out << "[";
-        for (int i = 0; i < list.n; ++i) {
-            out << list.arr[i];
-            if (i < list.n - 1) {
-                out << ", ";
-            }
-        }
-        out << "]";
-        return out;
-    }
+			if(n >= max) resize(max*2);
 
-    
-    void insert(int pos, const T& element) override {
-        if (pos < 0 || pos > n) {
-            throw std::out_of_range("Index out of range");
-        }
-        if (n == max) {
-            resize(max * 2); // Redimensionar si el array está lleno.
-        }
-        for (int i = n; i > pos; --i) {
-            arr[i] = arr[i - 1];
-        }
-        arr[pos] = element;
-        ++n;
-    }
+			if(n == 0){
+				arr[0] = e;
+			}else if(pos == n){
+				arr[pos] = e;
+			}else{
+				for(int i=n; i>=pos; i--){
+					arr[i] = arr[i-1];
+				}
+			}
+			arr[pos] = e;
+			n++;
+		}
 
-    
-    void remove(int pos) override {
-        if (pos < 0 || pos >= n) {
-            throw std::out_of_range("Index out of range");
-        }
-        for (int i = pos; i < n - 1; ++i) {
-            arr[i] = arr[i + 1];
-        }
-        --n;
 
-        
-        if (n < max / 4 && max / 2 >= MINSIZE) {
-            resize(max / 2);
-        }
-    }
+		void append(T e){
+			insert(n, e);
+		}
 
-    
-    int size() const override {
-        return n;
-    }
+		void prepend(T e){
+			insert(0, e);
+		}
 
-    
-    void append(const T& element) override {
-        if (n == max) {
-            resize(max * 2);
-        }
-        arr[n++] = element;
-    }
+		T remove(int pos){
+			if(pos < 0 || pos >= n) throw std::out_of_range("Posicion fuera de rango");
 
-    
-    void prepend(const T& element) override {
-        insert(0, element);
-    }
+			T temp = arr[pos];
+
+			for(int i = pos; i < n-1; i++){
+				arr[pos] = arr[pos+1];
+			}
+			n--;
+			return temp;
+		}
+
+		T get(int pos){
+			if(pos < 0 || pos >= n) throw std::out_of_range("Posicion fuera de rango");
+			return arr[pos];
+		}
+
+		int search(T e){
+			for(int i = 0; i < n; i++){
+				if(arr[i] == e) return i;
+			}
+			return -1;
+		}
+
+		bool empty(){
+			return n==0;
+		}
+
+		int size(){
+			return n;
+		}
+
+		ListArray(){
+			arr = new T[MINSIZE];
+			max = MINSIZE;
+			n = 0;
+		}
+
+		~ListArray(){
+			delete[] arr;
+		}
+
+		T operator[](int pos){
+			return get(pos);
+		}
+
+		friend std::ostream& operator<<(std::ostream &out, const ListArray<T> &list){
+			out << "Array [";
+			for(int i = 0; i < list.n; i++){
+				out << "\n" << list.arr[i];
+				//Falta arreglar la coma alfinal del array
+			}
+
+			if(list.n>0) out << "\n";
+
+			out << "]";
+			return out;
+		}
+
 };
-
-
 
